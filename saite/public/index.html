@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Web App</title>
+</head>
+<body>
+  <h1 id="greeting">Hello!</h1>
+  <div id="prizes"></div>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    // Initialize the Telegram Web App
+    const tg = window.Telegram.WebApp;
+
+    // Set Telegram theme parameters as CSS variables
+    document.documentElement.style.setProperty('--tg-bg-color', tg.themeParams.bg_color || 'black');
+    document.documentElement.style.setProperty('--tg-text-color', tg.themeParams.text_color || 'white');
+    document.documentElement.style.setProperty('--tg-button-color', tg.themeParams.button_color || '#0088cc');
+    document.documentElement.style.setProperty('--tg-button-text-color', tg.themeParams.button_text_color || '#fff');
+
+    // Function to fetch user points from the server
+    async function fetchUserPoints(userId) {
+      try {
+        const response = await fetch(`http://localhost:3000/points/${userId}`);
+        const data = await response.json();
+        return data.points;
+      } catch (error) {
+        console.error('Error fetching user points:', error);
+        return 0;
+      }
+    }
+
+    // Function to fetch prizes from the server
+    async function fetchPrizes() {
+      try {
+        const response = await fetch('http://localhost:3000/prizes');
+        const data = await response.json();
+        return data.prizes;
+      } catch (error) {
+        console.error('Error fetching prizes:', error);
+        return [];
+      }
+    }
+
+    // Function to buy a prize
+    async function buyPrize(userId, prizeId) {
+      try {
+        const response = await fetch('http://localhost:3000/buyPrize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userId, prizeId })
+        });
+        const data = await response.json();
+        if (data.error) {
+          alert(data.error);
+        } else {
+          alert(`Prize purchased successfully! New points: ${data.newPoints}`);
+        }
+      } catch (error) {
+        console.error('Error buying prize:', error);
+      }
+    }
+
+    // Display prizes
+    (async () => {
+      const prizes = await fetchPrizes();
+      const userId = tg.initDataUnsafe.user.id;
+      const points = await fetchUserPoints(userId);
+      document.getElementById('greeting').innerText = `Hello, ${tg.initDataUnsafe.user.first_name}!\nYou have ${points} points.`;
+
+      const prizesContainer = document.getElementById('prizes');
+      prizes.forEach(prize => {
+        const prizeElement = document.createElement('div');
+        prizeElement.innerHTML = `
+          <img src="${prize.image}" alt="${prize.name}" />
+          <p>${prize.name}</p>
+          <p>Cost: ${prize.cost} points</p>
+          <button onclick="buyPrize(${userId}, ${prize.id})">Buy</button>
+        `;
+        prizesContainer.appendChild(prizeElement);
+      });
+    })();
+
+    // Notify Telegram that the web app is ready
+    tg.ready();
+  </script>
+</body>
+</html>
