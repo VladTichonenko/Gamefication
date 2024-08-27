@@ -163,8 +163,7 @@ async def handle_message(message: types.Message):
         current_score += 1
 
         # Проверяем на наличие плохих слов
-        if any(bad_word in message_text for bad_word in bad_words):
-            update_user_score(db_connection, user_id, -1)
+        if message_text=="." or message_text=="плохо" or message_text == "xxx":
             current_score -= 1
             await message.delete()  # Удаляем плохое сообщение
             await message.answer(f'{full_name}, в Вашем комментарии обнаружено негативное слово!\nСообщение было удалено. Ваши баллы: {current_score}')
