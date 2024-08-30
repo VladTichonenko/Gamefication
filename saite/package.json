@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "express": "^4.19.2",
+    "handle": "^1.0.0",
     "sqlite3": "^5.1.7"
   }
 }

@@ -1,0 +1,86 @@
+/* styles.css */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --button-color: #0088cc;
+  --button-text-color: #ffffff;
+  --product-bg-color: #e0f7ff; /* Светло-синий цвет для светлой темы */
+}
+
+body.dark-theme {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --button-color: #444444;
+  --button-text-color: #ffffff;
+  --product-bg-color: #333333; /* Серый цвет для темной темы */
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: var(--button-color);
+  color: var(--button-text-color);
+}
+
+header button {
+  background-color: var(--button-color);
+  color: var(--button-text-color);
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+header button:hover {
+  background-color: darken(var(--button-color), 10%);
+}
+
+.prizes-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 20px;
+}
+
+.message {
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin: 10px;
+  width: 200px;
+  text-align: center;
+  background-color: var(--product-bg-color);
+  color: var(--text-color);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.message img {
+  max-width: 100%;
+  height: auto;
+}
+
+.message button {
+  background-color: var(--button-color);
+  color: var(--button-text-color);
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: transform 0.1s;
+}
+
+.message button:active {
+  transform: scale(0.95); /* Эффект нажатия */
+}
+
+.message button:hover {
+  background-color: darken(var(--button-color), 10%);
+}

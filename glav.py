@@ -51,7 +51,7 @@ Chanel_id="-1002208916163"
 Not_Sub_Message="Для доступа к функционалу, пожалуйста подпишитесь на канал!"
 storage=MemoryStorage()
 
-db1=DataBase('bonus.db')
+db1=DataBase('E:\gemivication\Gamefication\saite\database\users.db')
 
 
 # константы
@@ -114,7 +114,7 @@ async def start(message: types.Message):
 
 # Создание или подключение к базе данных
 def setup_database():
-    conn = sqlite3.connect('user_scores.db')
+    conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS scores (
@@ -127,17 +127,18 @@ def setup_database():
 
 def get_user_score(conn, user_id):
     c = conn.cursor()
-    c.execute('SELECT score FROM scores WHERE user_id = ?', (user_id,))
+    c.execute('SELECT points FROM users WHERE user_id = ?', (user_id,))
     result = c.fetchone()
     return result[0] if result else 0
 
-def update_user_score(conn, user_id, score):
+def update_user_score(conn, user_id, points):
     c = conn.cursor()
     c.execute('''
-        INSERT INTO scores (user_id, score) VALUES (?, ?)
-        ON CONFLICT(user_id) DO UPDATE SET score = score + ?
-    ''', (user_id, score, score))
+        INSERT INTO users (user_id, referer_id, points) VALUES (?, NULL, ?)
+        ON CONFLICT(user_id) DO UPDATE SET points = points + excluded.points
+    ''', (user_id, points))
     conn.commit()
+
 
 # Вызов функции для настройки базы данных
 db_connection = setup_database()
