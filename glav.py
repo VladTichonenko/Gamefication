@@ -10,12 +10,17 @@ import config as cf
 from GAmefication import database as db
 from database import DataBase
 import os
+from datetime import datetime, timedelta
+from collections import defaultdict
 import sqlite3
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import logging
 import requests
+import time
+
+
 
 # функция на добовления плохих слов
 def load_bad_words(url):
@@ -29,6 +34,12 @@ def load_bad_words(url):
         print(f"Не удалось загрузить файл. Статус код: {response.status_code}")
         return []
 
+
+# Константы
+POINTS_PER_COMMENT = 1
+MAX_COMMENTS_PER_DAY = 3
+
+user_data = defaultdict(lambda: {'points': 0, 'comments': 0, 'last_comment_time': datetime.now()})
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
@@ -48,13 +59,19 @@ bad_words = load_bad_words(bad_words_url)
 
 # ID канала, который нужно проверить
 Chanel_id="-1002208916163"
+Chanel2_id="-1002154835852"
 Not_Sub_Message="Для доступа к функционалу, пожалуйста подпишитесь на канал!"
 storage=MemoryStorage()
 
 db1 = DataBase(r'E:\gemivication\Gamefication\saite\database\users.db')
 
 
-
+async def check_subscriptions(user_id, channel_ids):
+    subscriptions = []
+    for channel_id in channel_ids:
+        member = await bot.get_chat_member(chat_id=channel_id, user_id=user_id)
+        subscriptions.append(chek_chanel(member))
+    return all(subscriptions)
 # константы
 
 
@@ -108,7 +125,7 @@ async def start(message: types.Message):
                     await bot.send_message(message.from_user.id, "Нельзя регистрировать по собственной реферальной ссылке!")
             else:
                 db1.add_user(message.from_user.id)
-        await message.answer(f'Привет, {full_name}\nДобро пожаловать в ......', reply_markup=krb.glav)
+        await message.answer(f'Привет, {full_name}\nДобро пожаловать в TGplay!', reply_markup=krb.glav)
     else:
         await bot.send_message(message.from_user.id, Not_Sub_Message, reply_markup=krb.My_Chanel)
 
@@ -144,34 +161,50 @@ def update_user_score(conn, user_id, points):
 # Вызов функции для настройки базы данных
 db_connection = setup_database()
 
+# Словарь для отслеживания комментариев пользователей
+user_comments = defaultdict(list)
 
+
+# !!!!!!!!
 # Хэндлер для обработки комментариев и сообщений
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def handle_message(message: types.Message):
     user_name = message.from_user.first_name
     user_last_name = message.from_user.last_name
     full_name = f'{user_name} {user_last_name}' if user_last_name else user_name
+
     if message.chat.type == 'supergroup':
         user_id = message.from_user.id
         message_text = message.text.lower()
 
         # Получаем текущее количество баллов пользователя
         current_score = get_user_score(db_connection, user_id)
-
-        # Начисляем балл за каждое сообщение
         if current_score is None:
             current_score = 0
-        update_user_score(db_connection, user_id, 1)
-        current_score += 1
+
+        # Проверяем время и количество комментариев
+        current_time = time.time()  # Текущее время в секундах с момента начала эпохи
+        user_comments[user_id] = [timestamp for timestamp in user_comments[user_id] if
+                                  current_time - timestamp <= 5 * 3600]  # Оставляем только комментарии за последние 5 часов
+
+        if len(user_comments[user_id]) < 3:
+            # Начисляем балл, если комментариев меньше 3 за 5 часов
+            update_user_score(db_connection, user_id, 1)
+            current_score += 1
+            user_comments[user_id].append(current_time)  # Добавляем текущее время в список
+
+            await message.answer(f'{full_name}, Ваши баллы: {current_score}')
+        else:
+            # Если пользователь достиг лимита, предупреждаем его
+            await message.answer(
+                f'{full_name}, вы достигли лимита в 3 комментария за 5 часов. Остальные комментарии не будут начислены баллы.')
 
         # Проверяем на наличие плохих слов
-        if message_text=="." or message_text=="плохо" or message_text == "xxx":
-            current_score -= 1
+        if message_text in (".", "плохо", "xxx" , "ХУЙ"):
+            # current_score -= 1
             await message.delete()  # Удаляем плохое сообщение
-            await message.answer(f'{full_name}, в Вашем комментарии обнаружено негативное слово!\nСообщение было удалено. Ваши баллы: {current_score}')
-        else:
-            await message.answer(f'{full_name}, Ваши баллы: {current_score}')
-
+            await message.answer(
+                f'{full_name}, в Вашем комментарии обнаружено негативное слово!\nСообщение было удалено. Ваши баллы: {current_score}')
 
 
 
@@ -211,7 +244,7 @@ async def add_item_photo(message: types.Message, state: FSMContext):
 async def cancel_handler(callback_query: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await callback_query.message.answer("Добавление отменено.")
-    await callback_query.message.answer (f'Добро пожаловать в ......', reply_markup=krb.glav)
+    await callback_query.message.answer (f'Добро пожаловать в TGplay!', reply_markup=krb.glav)
 
 @dp.message_handler(commands=['admin'])
 async def start(message: types.Message):
@@ -232,9 +265,22 @@ async def subchanel(callback_query: types.CallbackQuery):
     await bot.delete_message(callback_query.from_user.id, callback_query.message.message_id)
 
     if chek_chanel(await bot.get_chat_member(chat_id=Chanel_id, user_id=callback_query.from_user.id)):
-        await bot.send_message(callback_query.from_user.id, f'Привет, {full_name}\nДобро пожаловать в ......', reply_markup=krb.glav)
+        await bot.send_message(callback_query.from_user.id, f'Привет, {full_name}\nДобро пожаловать в TGplay!', reply_markup=krb.glav)
     else:
         await bot.send_message(callback_query.from_user.id, Not_Sub_Message, reply_markup=krb.My_Chanel)
+
+
+
+@dp.callback_query_handler(lambda query: query.data == 'more')
+async def More(callback_query: types.CallbackQuery):
+    await bot.send_message(
+        callback_query.from_user.id,
+        "<b>TGplay: Получайте больше от подписки на канал!</b>\n\n"
+        "Проявляйте активность, выполняйте дополнительные задания, "
+        "копите очки и разблокируйте награды!🎁\n\n"
+        "️️⚠️ Награды, их содержание и доставка являются ответственностью админов/владельцев каналов.",
+        parse_mode='HTML'  # Указываем режим разметки
+    )
 
 
 # реферальная система
