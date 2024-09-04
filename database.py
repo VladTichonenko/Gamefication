@@ -2,22 +2,15 @@ import sqlite3 as sq
 
 async def db_start():
     global db, cur
-    db = sq.connect('priz.db')
+    db = sq.connect('E:\gemivication\Gamefication\saite\database\users.db')
     cur = db.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS items("
-                "i_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                "name TEXT, "
-                "price TEXT, "
-                "photo TEXT)")
-    db.commit()
 
 async def add_item(state):
     global db, cur
     async with state.proxy() as data:
-        cur.execute("INSERT INTO items (name, price, photo) VALUES (?, ?, ?)",  # Исправлено на 'accounts'
-                    (data['name'], data['price'], data['photo']))
+        cur.execute("INSERT INTO prizes (name, description, cost, image) VALUES (?, ?, ?, ?)",
+                    (data['name'], None, data['price'], data['photo']))
         db.commit()
-
 
 class DataBase:
     def __init__(self, db_file):
@@ -26,14 +19,24 @@ class DataBase:
         self.create_tables()  # Создаем таблицы при инициализации
 
     def create_tables(self):
-        self.cursor.execute('''
-               CREATE TABLE IF NOT EXISTS users (
-                   id INTEGER PRIMARY KEY AUTOINCREMENT,
-                   user_id INTEGER UNIQUE,
-                   referer_id INTEGER
-               )
-           ''')
-        self.connection.commit()  # Сохраняем изменения
+        with self.connection:
+            self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    referer_id INTEGER,
+                    points INTEGER DEFAULT 0
+                )
+            """)
+            self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS prizes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    cost INTEGER NOT NULL,
+                    image TEXT
+                )
+            """)
 
     def user_exists(self, user_id):
         print("exists")
@@ -45,13 +48,14 @@ class DataBase:
         with self.connection:
             print("adding user")
             if referer_id is not None:
-                return self.cursor.execute("INSERT INTO users (user_id, referer_id) VALUES (?, ?)", (user_id, int(referer_id)))
+                return self.cursor.execute("INSERT INTO users (user_id, referer_id, points) VALUES (?, ?, ?)", (user_id, int(referer_id), 0))
             else:
-                return self.cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
+                return self.cursor.execute("INSERT INTO users (user_id, points) VALUES (?, ?)", (user_id, 0))
 
     def count_referals(self, user_id):
         with self.connection:
             return self.cursor.execute("SELECT COUNT(id) as count FROM users WHERE referer_id = ?", (user_id,)).fetchone()[0]
 
     def __del__(self):
-        self.connection.close()
+        with self.connection:
+            self.connection.close()
