@@ -51,7 +51,8 @@ Chanel_id="-1002208916163"
 Not_Sub_Message="Для доступа к функционалу, пожалуйста подпишитесь на канал!"
 storage=MemoryStorage()
 
-db1=DataBase('E:\gemivication\Gamefication\saite\database\users.db')
+db1 = DataBase(r'E:\gemivication\Gamefication\saite\database\users.db')
+
 
 
 # константы

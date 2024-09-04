@@ -56,6 +56,7 @@ async function buyPrize(prizeId) {
 
 // Функция для переключения темы
 function toggleTheme() {
+  console.log('Тема переключается'); // Отладочное сообщение
   document.body.classList.toggle('dark-theme');
   const themeIcon = document.getElementById('theme-icon');
   if (document.body.classList.contains('dark-theme')) {
@@ -63,10 +64,22 @@ function toggleTheme() {
   } else {
     themeIcon.textContent = '🌞'; // Иконка солнца для светлой темы
   }
+  // Сохраняем текущую тему в localStorage
+  localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+}
+
+// Устанавливаем тему при загрузке страницы
+function setInitialTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+    document.getElementById('theme-icon').textContent = '🌜';
+  }
 }
 
 // Отображение призов
 (async () => {
+  setInitialTheme(); // Устанавливаем тему при загрузке страницы
   const prizes = await fetchPrizes();
   const points = await fetchUserPoints();
   updatePointsDisplay(points); // Обновляем отображение баллов при загрузке страницы
@@ -87,3 +100,5 @@ function toggleTheme() {
   // Добавляем обработчик для кнопки переключения темы
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 })();
+
+

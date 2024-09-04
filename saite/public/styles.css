@@ -1,47 +1,33 @@
-/* styles.css */
-:root {
-  --bg-color: #ffffff;
-  --text-color: #000000;
-  --button-color: #0088cc;
-  --button-text-color: #ffffff;
-  --product-bg-color: #e0f7ff; /* Светло-синий цвет для светлой темы */
-}
-
-body.dark-theme {
-  --bg-color: #000000;
-  --text-color: #ffffff;
-  --button-color: #444444;
-  --button-text-color: #ffffff;
-  --product-bg-color: #333333; /* Серый цвет для темной темы */
-}
-
 body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
   font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
   margin: 0;
   padding: 0;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.dark-theme {
+  background-color: #121212;
+  color: #fcf8f8;
 }
 
 header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: var(--button-color);
-  color: var(--button-text-color);
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 0;
+  text-align: center;
 }
 
-header button {
-  background-color: var(--button-color);
-  color: var(--button-text-color);
+body.dark-theme header {
+  background-color: #333;
+}
+
+#theme-toggle {
+  background: none;
   border: none;
-  padding: 10px 20px;
+  color: white;
+  font-size: 20px;
   cursor: pointer;
-}
-
-header button:hover {
-  background-color: darken(var(--button-color), 10%);
 }
 
 .prizes-container {
@@ -51,36 +37,21 @@ header button:hover {
   padding: 20px;
 }
 
-.message {
-  border: 1px solid #ccc;
-  padding: 20px;
+.prizes-container div {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
   margin: 10px;
+  padding: 20px;
   width: 200px;
-  text-align: center;
-  background-color: var(--product-bg-color);
-  color: var(--text-color);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.message img {
-  max-width: 100%;
-  height: auto;
+body.dark-theme .prizes-container div {
+  background-color: #333;
+  border-color: #555;
 }
 
-.message button {
-  background-color: var(--button-color);
-  color: var(--button-text-color);
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: transform 0.1s;
-}
-
-.message button:active {
-  transform: scale(0.95); /* Эффект нажатия */
-}
-
-.message button:hover {
-  background-color: darken(var(--button-color), 10%);
+#theme-icon {
+  font-size: 24px;
 }
