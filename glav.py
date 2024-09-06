@@ -63,7 +63,7 @@ Chanel2_id="-1002154835852"
 Not_Sub_Message="Для доступа к функционалу, пожалуйста подпишитесь на канал!"
 storage=MemoryStorage()
 
-db1 = DataBase(r'E:\gemivication\Gamefication\saite\database\users.db')
+db1 = DataBase(r'C:\Users\user\PycharmProjects\pythonProject21\GAmefication\ref.db')
 
 
 async def check_subscriptions(user_id, channel_ids):
@@ -129,6 +129,19 @@ async def start(message: types.Message):
     else:
         await bot.send_message(message.from_user.id, Not_Sub_Message, reply_markup=krb.My_Chanel)
 
+@dp.message_handler(commands=['admin'])
+async def start(message: types.Message):
+    print(1)
+    if creater(await bot.get_chat_member(chat_id=Chanel_id, user_id=message.from_user.id)):
+        await message.answer("Успешный вход в админ панель✅")
+        await message.answer("Чтобы добавить приз нажмите на сит фразу /admin_1_get_users\nЧтобы вернуться в меню /start")
+    else:
+        await message.answer("Вы не являетесь владельцем канала(")
+
+@dp.message_handler(commands=['admin_1_get_users'])
+async def start(message: types.Message):
+    await message.answer("Давайте добавим приз!\nВведите название ", reply_markup=krb.cancel_keyboard())
+    await NewOrder.next()
 
 # Создание или подключение к базе данных
 def setup_database():
@@ -208,11 +221,7 @@ async def handle_message(message: types.Message):
 
 
 
-@dp.message_handler(commands=['admin_1_get_users'])
-async def start(message: types.Message):
 
-    await message.answer("Давайте добавим приз!\nВведите название ", reply_markup=krb.cancel_keyboard())
-    await NewOrder.next()
 
 @dp.message_handler(state=NewOrder.name)
 async def start(message: types.Message , state: FSMContext):
@@ -232,13 +241,28 @@ async def start(message: types.Message , state: FSMContext):
 async def add_item_photo_check(message: types.Message):
     await message.answer('Это не фотография!')
 
+
 @dp.message_handler(content_types=['photo'], state=NewOrder.photo)
 async def add_item_photo(message: types.Message, state: FSMContext):
+    # Получаем фото и выбираем наибольшее качество
+    photo = message.photo[-1]  # берём самое качественное фото (последний элемент)
+    # Получаем файл изображения
+    file_id = photo.file_id
+    file = await bot.get_file(file_id)
+    # Указываем путь для сохранения
+    way = 'C:/Users/user/PycharmProjects/pythonProject21/GAmefication/img/' + file.file_path.split('/')[
+        -1]  # Добавляем имя файла
+    # Скачиваем файл
+    await bot.download_file(file.file_path, way)  # Сохраняем файл
+    print("Фото сохранено")
+    # Сохраняем идентификатор файла в состоянии
     async with state.proxy() as data:
-        data['photo'] = message.photo[0].file_id
+        data['photo'] = file_id
+    # Добавляем элемент в базу данных
     await db.add_item(state)
     await message.answer('Приз успешно добавлен!')
     await state.finish()
+
 
 @dp.callback_query_handler(text='cancel', state="*")
 async def cancel_handler(callback_query: types.CallbackQuery, state: FSMContext):
@@ -246,13 +270,7 @@ async def cancel_handler(callback_query: types.CallbackQuery, state: FSMContext)
     await callback_query.message.answer("Добавление отменено.")
     await callback_query.message.answer (f'Добро пожаловать в TGplay!', reply_markup=krb.glav)
 
-@dp.message_handler(commands=['admin'])
-async def start(message: types.Message):
-    if creater(await bot.get_chat_member(chat_id=Chanel_id, user_id=message.from_user.id)):
-        await message.answer("Успешный вход в админ панель✅")
-        await message.answer("Чтобы добавить приз нажмите на сит фразу /admin_1_get_users\nЧтобы вернуться в меню /start")
-    else:
-        await message.answer("Вы не являетесь владельцем канала(")
+
 
 
 
