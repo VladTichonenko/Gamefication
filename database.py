@@ -1,9 +1,11 @@
 import sqlite3 as sq
-
+'''
 async def db_start():
     global db, cur
-    db = sq.connect('E:\gemivication\Gamefication\saite\database\users.db')
+    db = sq.connect('Gamefication/database/users.db')
     cur = db.cursor()
+'''
+
 
 async def add_item(state):
     global db, cur
@@ -55,7 +57,24 @@ class DataBase:
     def count_referals(self, user_id):
         with self.connection:
             return self.cursor.execute("SELECT COUNT(id) as count FROM users WHERE referer_id = ?", (user_id,)).fetchone()[0]
+    
+    def get_user_score(self, user_id):
+        with self.connection:
+            self.cursor.execute('SELECT points FROM users WHERE user_id = ?', (user_id,))
+            result = self.cursor.fetchone()
+            return result[0] if result else 0
+
+    def update_user_score(self, user_id, points):
+        with self.connection:
+            self.cursor.execute('''
+            INSERT INTO users (user_id, referer_id, points) VALUES (?, NULL, ?)
+            ON CONFLICT(user_id) DO UPDATE SET points = points + excluded.points
+            ''', (user_id, points))
+            self.connection.commit()
+
 
     def __del__(self):
-        with self.connection:
-            self.connection.close()
+        if hasattr(self, 'connection'):
+            with self.connection:
+                self.connection.close()
+
