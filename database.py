@@ -26,7 +26,7 @@ class DataBase:
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    referer_id INTEGER,
+                    referal_id	 INTEGER,
                     points INTEGER DEFAULT 0
                 )
             """)
@@ -50,13 +50,13 @@ class DataBase:
         with self.connection:
             print("adding user")
             if referer_id is not None:
-                return self.cursor.execute("INSERT INTO users (user_id, referer_id, points) VALUES (?, ?, ?)", (user_id, int(referer_id), 0))
+                return self.cursor.execute("INSERT INTO users (user_id, referal_id	, points) VALUES (?, ?, ?)", (user_id, int(referer_id), 0))
             else:
                 return self.cursor.execute("INSERT INTO users (user_id, points) VALUES (?, ?)", (user_id, 0))
 
     def count_referals(self, user_id):
         with self.connection:
-            return self.cursor.execute("SELECT COUNT(id) as count FROM users WHERE referer_id = ?", (user_id,)).fetchone()[0]
+            return self.cursor.execute("SELECT COUNT(id) as count FROM users WHERE referal_id	 = ?", (user_id,)).fetchone()[0]
     
     def get_user_score(self, user_id):
         with self.connection:
@@ -66,12 +66,25 @@ class DataBase:
 
     def update_user_score(self, user_id, points):
         with self.connection:
-            self.cursor.execute('''
-            INSERT INTO users (user_id, referer_id, points) VALUES (?, NULL, ?)
-            ON CONFLICT(user_id) DO UPDATE SET points = points + excluded.points
-            ''', (user_id, points))
+            # Проверяем, существует ли запись с данным user_id
+            self.cursor.execute('SELECT points FROM users WHERE user_id = ?', (user_id,))
+            result = self.cursor.fetchone()
+            
+            if result:
+                # Если запись существует, обновляем очки
+                self.cursor.execute('UPDATE users SET points = points + ? WHERE user_id = ?', (points, user_id))
+            else:
+                # Если записи нет, вставляем новую
+                self.cursor.execute('INSERT INTO users (user_id, referal_id, points) VALUES (?, NULL, ?)', (user_id, points))
+            
             self.connection.commit()
 
+
+    def get_random_user_id(self):
+            with self.connection:
+                result = self.cursor.execute("SELECT user_id FROM users ORDER BY RANDOM() LIMIT 1").fetchone()
+                return result[0] if result else None
+            
 
     def __del__(self):
         if hasattr(self, 'connection'):

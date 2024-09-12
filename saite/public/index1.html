@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Телеграм Стиль</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <button id="theme-toggle" onclick="toggleTheme()">🌞</button>
+        <h1>Другие каналы</h1>
+        <p>Подписывайтесь на наши каналы, чтобы получить больше монет</p>
+        <div class="subscribe-buttons">
+            <button id="channel1" onclick="subscribe('channel1', 'https://t.me/your_channel1')">Подписаться на Канал 1</button>
+            <button id="channel2" onclick="subscribe('channel2', 'https://t.me/your_channel2')">Подписаться на Канал 2</button>
+            <button id="channel3" onclick="subscribe('channel3', 'https://t.me/your_channel3')">Подписаться на Канал 3</button>
+            <button id="channel4" onclick="subscribe('channel4', 'https://t.me/your_channel4')">Подписаться на Канал 4</button>
+        </div>
+        <div id="congratulations-message" style="display: none; margin-top: 20px; background-color: #ebebeb; padding: 6px; border-radius: 5px;">
+            <h1>🎉</h1>
+            <p>Вы получили 100 баллов</p>
+        </div>
+        <a href="index.html" class="fixed-button">На главную</a>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
+
+
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    text-align: center;
+    padding: 50px;
+    position: relative;
+}
+
+#theme-toggle {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    border: none;
+    background: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.light-theme {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.dark-theme {
+    height: 1500px; /* Достаточная высота для скролла */
+    background: linear-gradient(to bottom, #5c5c5c, #3e3e3e);
+    color: #c3c3c3;
+}
+
+.subscribe-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+button {
+    margin: 10px 0; /* Увеличиваем отступ между кнопками */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #0088cc; /* Голубой цвет кнопок */
+    color: white;
+    transition: background-color 0.3s;
+}
+
+button:disabled {
+    background-color: #ccc; /* Цвет для заблокированных кнопок */
+    cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+    background-color: #007bb5; /* Темнее голубого при наведении */
+}
+
+#congratulations-message {
+    margin-top: 20px;
+}
+
+.fixed-button {
+            position: fixed;
+            bottom: 20px; /* Расстояние от нижней грани экрана */
+            left: 50%;
+            transform: translateX(-50%); /* Центрирование кнопки */
+            background-color: #007bff; /* Цвет кнопки */
+            color: white; /* Цвет текста */
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .fixed-button:hover {
+            background-color: #0056b3; /* Цвет кнопки при наведении */
+        }
+</style>

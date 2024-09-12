@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
-  referal_id INTEGER NOT NULL,
+  referal_id INTEGER,
   points INTEGER DEFAULT 0
 );
 
@@ -22,3 +22,6 @@ INSERT INTO users (user_id, referal_id, points) VALUES (2, 2, 1500);
 -- Добавление начальных данных в таблицу prizes
 INSERT INTO prizes (name, description, cost, image) VALUES ('Teddy Bear', 'A cute teddy bear.', 50, 'teddy_bear.png');
 INSERT INTO prizes (name, description, cost, image) VALUES ('Gift Card', 'A $10 gift card.', 100, 'gift_card.png');
+
+ALTER TABLE users
+MODIFY COLUMN referal_id INTEGER NULL;
