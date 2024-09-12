@@ -8,16 +8,28 @@ const port = 3000;
 app.use(express.json());
 
 // Маршрут для получения баллов пользователя по его ID
-app.get('/points/:userId', (req, res) => {
-  const userId = req.params.userId;
-  console.log(`Запрос на получение баллов для пользователя: ${userId}`);
-  db.getUserPointsById(userId, (err, points) => {
+app.post('/update-points', (req, res) => {
+  const userId = req.body.userId;
+  const pointsToAdd = 100;
+
+  // Сначала получаем текущие баллы пользователя
+  db.getUserPointsById(userId, (err, currentPoints) => {
     if (err) {
       console.error('Ошибка при получении баллов пользователя:', err.message);
       res.status(500).json({ error: 'Internal Server Error' });
     } else {
-      console.log(`Баллы пользователя ${userId}: ${points}`);
-      res.json({ points });
+      const newPoints = currentPoints + pointsToAdd;
+
+      // Обновляем баллы пользователя
+      db.updateUserPoints(userId, newPoints, (err) => {
+        if (err) {
+          console.error('Ошибка при обновлении баллов пользователя:', err.message);
+          res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+          console.log(`Баллы пользователя ${userId} успешно обновлены. Текущие баллы: ${newPoints}`);
+          res.json({ success: true, points: newPoints });
+        }
+      });
     }
   });
 });
@@ -69,6 +81,20 @@ app.post('/buyPrize', (req, res) => {
           }
         }
       });
+    }
+  });
+});
+
+// Маршрут для получения баллов пользователя по его ID
+app.get('/points/:userId', (req, res) => {
+  const userId = req.params.userId;
+
+  db.getUserPointsById(userId, (err, points) => {
+    if (err) {
+      console.error('Ошибка при получении баллов пользователя:', err.message);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      res.json({ points });
     }
   });
 });

@@ -1,3 +1,5 @@
+import asyncio
+from reaktion import reaction
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types.web_app_info import WebAppInfo
 from aiogram.dispatcher.filters.state import State, StatesGroup
@@ -6,8 +8,9 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 import keyboard as krb
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import config as cf
-from GAmefication import database as db
+#from Gamefication import database as db
 from database import DataBase
 import os
 from datetime import datetime, timedelta
@@ -20,12 +23,12 @@ import logging
 import requests
 import time
 
+BOT_TOKEN='7106909032:AAHSN6OOHppekDf4_pwxqBffVw-vWfsQmxw'
 
 
 # функция на добовления плохих слов
 def load_bad_words(url):
     response = requests.get(url)
-
     # Проверка на успешный ответ
     if response.status_code == 200:
         # Разбиваем текст на строки и возвращаем список слов
@@ -63,8 +66,7 @@ Chanel2_id="-1002154835852"
 Not_Sub_Message="Для доступа к функционалу, пожалуйста подпишитесь на канал!"
 storage=MemoryStorage()
 
-db1 = DataBase(r'C:\Users\user\PycharmProjects\pythonProject21\GAmefication\ref.db')
-
+db1 = DataBase(r'E:/gemivication/Gamefication/database/users.db')
 
 async def check_subscriptions(user_id, channel_ids):
     subscriptions = []
@@ -76,7 +78,7 @@ async def check_subscriptions(user_id, channel_ids):
 
 
 async def on_startup(_):
-    await db.db_start()
+    
     print('Бот успешно запущен!')
 
 # Классы для FSM
@@ -107,6 +109,8 @@ def creater(chat_member):
 # Хэндлер для команды /start
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
+    global user_id
+    user_id = message.from_user.id
     user_name = message.from_user.first_name
     user_last_name = message.from_user.last_name
     full_name = f'{user_name} {user_last_name}' if user_last_name else user_name
@@ -125,7 +129,7 @@ async def start(message: types.Message):
                     await bot.send_message(message.from_user.id, "Нельзя регистрировать по собственной реферальной ссылке!")
             else:
                 db1.add_user(message.from_user.id)
-        await message.answer(f'Привет, {full_name}\nДобро пожаловать в TGplay!', reply_markup=krb.glav)
+        await message.answer(f'Привет, {full_name}\nДобро пожаловать в TGplay!', reply_markup=krb.create_keyboard(user_id))
     else:
         await bot.send_message(message.from_user.id, Not_Sub_Message, reply_markup=krb.My_Chanel)
 
@@ -144,17 +148,20 @@ async def start(message: types.Message):
     await NewOrder.next()
 
 # Создание или подключение к базе данных
+"""
 def setup_database():
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect('Gamefication/database/users.db')
     c = conn.cursor()
     c.execute('''
-        CREATE TABLE IF NOT EXISTS scores (
-            user_id INTEGER PRIMARY KEY,
-            score INTEGER NOT NULL
-        )
+        CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  referal_id INTEGER NOT NULL,
+  points INTEGER DEFAULT 0
+);
     ''')
-    conn.commit()
-    return conn
+    #conn.commit()
+    #return conn
 
 def get_user_score(conn, user_id):
     c = conn.cursor()
@@ -169,10 +176,10 @@ def update_user_score(conn, user_id, points):
         ON CONFLICT(user_id) DO UPDATE SET points = points + excluded.points
     ''', (user_id, points))
     conn.commit()
-
+"""
 
 # Вызов функции для настройки базы данных
-db_connection = setup_database()
+# db_connection = setup_database()
 
 # Словарь для отслеживания комментариев пользователей
 user_comments = defaultdict(list)
@@ -191,7 +198,7 @@ async def handle_message(message: types.Message):
         message_text = message.text.lower()
 
         # Получаем текущее количество баллов пользователя
-        current_score = get_user_score(db_connection, user_id)
+        current_score = db1.get_user_score(user_id)
         if current_score is None:
             current_score = 0
 
@@ -202,7 +209,7 @@ async def handle_message(message: types.Message):
 
         if len(user_comments[user_id]) < 3:
             # Начисляем балл, если комментариев меньше 3 за 5 часов
-            update_user_score(db_connection, user_id, 1)
+            db1.update_user_score(user_id, 1)
             current_score += 1
             user_comments[user_id].append(current_time)  # Добавляем текущее время в список
 
@@ -250,7 +257,7 @@ async def add_item_photo(message: types.Message, state: FSMContext):
     file_id = photo.file_id
     file = await bot.get_file(file_id)
     # Указываем путь для сохранения
-    way = 'C:/Users/user/PycharmProjects/pythonProject21/GAmefication/img/' + file.file_path.split('/')[
+    way = '/GAmefication/img/' + file.file_path.split('/')[
         -1]  # Добавляем имя файла
     # Скачиваем файл
     await bot.download_file(file.file_path, way)  # Сохраняем файл
@@ -259,7 +266,7 @@ async def add_item_photo(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['photo'] = file_id
     # Добавляем элемент в базу данных
-    await db.add_item(state)
+    await db1.add_item(state)
     await message.answer('Приз успешно добавлен!')
     await state.finish()
 
@@ -268,7 +275,7 @@ async def add_item_photo(message: types.Message, state: FSMContext):
 async def cancel_handler(callback_query: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await callback_query.message.answer("Добавление отменено.")
-    await callback_query.message.answer (f'Добро пожаловать в TGplay!', reply_markup=krb.glav)
+    await callback_query.message.answer (f'Добро пожаловать в TGplay!', reply_markup=krb.create_keyboard(user_id))
 
 
 
@@ -283,7 +290,7 @@ async def subchanel(callback_query: types.CallbackQuery):
     await bot.delete_message(callback_query.from_user.id, callback_query.message.message_id)
 
     if chek_chanel(await bot.get_chat_member(chat_id=Chanel_id, user_id=callback_query.from_user.id)):
-        await bot.send_message(callback_query.from_user.id, f'Привет, {full_name}\nДобро пожаловать в TGplay!', reply_markup=krb.glav)
+        await bot.send_message(callback_query.from_user.id, f'Привет, {full_name}\nДобро пожаловать в TGplay!', reply_markup=krb.create_keyboard(user_id))
     else:
         await bot.send_message(callback_query.from_user.id, Not_Sub_Message, reply_markup=krb.My_Chanel)
 
@@ -311,6 +318,48 @@ async def Prof(callback_query: types.CallbackQuery):
         referals_count = db1.count_referals(user_id)  # предполагается, что функция принимает user_id
         full_name = f'{user_name} {user_last_name}' if user_last_name else user_name
         await bot.send_message(callback_query.from_user.id, f'👤 {full_name}\n\nВаш ID: {callback_query.from_user.id}\nВаша реферальная ссылка 🎁: https://t.me/{cf.BOT_NAME}?start={callback_query.from_user.id}\n\nКол-во рефералов: {referals_count}')
+
+@dp.message_handler(content_types=types.ContentType.ANY)
+async def add_button_to_new_post(message: types.Message):
+    if message.chat.type == 'channel':
+        keyboard = InlineKeyboardMarkup()
+        participate_button = InlineKeyboardButton('Участвовать', callback_data='participate')
+        keyboard.add(participate_button)
+
+        await bot.edit_message_reply_markup(chat_id=message.chat.id, message_id=message.message_id, reply_markup=keyboard)
+
+@dp.channel_post_handler()
+async def channel_message(message: types.Message):
+    # Когда в канале появляется новое сообщение, оно будет обрабатываться здесь
+    reactions = await reaction()
+    db1.update_user_score(db1.get_random_user_id,reactions*50)
+    print(f"Saving to DB")
+
+@dp.channel_post_handler()
+async def channel_message(message: types.Message):
+    # Создаем кнопку с ссылкой на пост
+    post_url = f"впиши сюда ссылку на канал"
+    keyboard = InlineKeyboardMarkup().add(InlineKeyboardButton("Перейти к посту", url=post_url))
+
+    # Отправляем сообщение с кнопкой в бота
+    await bot.send_message(message.chat.id, "Новый пост в канале!", reply_markup=keyboard)
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith('reaction'))
+async def process_callback_reaction(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    initial_reactions = await reaction()
+
+    await asyncio.sleep(10)  # Ждем 10 секунд
+
+    final_reactions = await reaction()
+
+    if final_reactions > initial_reactions:
+        points = final_reactions - initial_reactions
+        db1.update_user_score(user_id, points)
+        await bot.answer_callback_query(callback_query.id, f"Вы получили {points} баллов!")
+    else:
+        await bot.answer_callback_query(callback_query.id, "Количество реакций не изменилось.")
+
 
 if __name__ == '__main__':
     try:

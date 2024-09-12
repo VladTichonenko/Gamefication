@@ -1,25 +1,26 @@
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: #ffffff;
   margin: 0;
   padding: 0;
   transition: background-color 0.3s, color 0.3s;
 }
 
 .dark-theme {
-  background-color: #121212;
-  color: #fcf8f8;
+  background-color: #2a2f38;
+  color: #d1d1d1;
 }
 
 header {
-  background-color: #4CAF50;
+  background-color: #0088cc;
   color: white;
   padding: 10px 0;
   text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 body.dark-theme header {
-  background-color: #333;
+  background-color: #1b1f23;
 }
 
 #theme-toggle {
@@ -38,20 +39,61 @@ body.dark-theme header {
 }
 
 .prizes-container div {
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   margin: 10px;
   padding: 20px;
   width: 200px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 body.dark-theme .prizes-container div {
-  background-color: #333;
+  background-color: #3b3f45;
   border-color: #555;
 }
 
 #theme-icon {
   font-size: 24px;
+}
+
+.telegram-button {
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.telegram-button:hover {
+  background-color: #007bb5;
+}
+
+body.dark-theme .telegram-button {
+  background-color: #1b1f23;
+}
+
+body.dark-theme .telegram-button:hover {
+  background-color: #333;
+}
+
+.fixed-button {
+  position: fixed;
+  bottom: 20px; /* Расстояние от нижней грани экрана */
+  left: 50%;
+  transform: translateX(-50%); /* Центрирование кнопки */
+  background-color: #007bff; /* Цвет кнопки */
+  color: white; /* Цвет текста */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.fixed-button:hover {
+  background-color: #0056b3; /* Цвет кнопки при наведении */
 }

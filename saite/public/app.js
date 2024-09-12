@@ -1,5 +1,8 @@
 // Установим локальные данные для тестирования
-const userId = 1; // Замените на любое значение для тестирования
+const urlParams = new URLSearchParams(window.location.search);
+const userId = urlParams.get('user_id');
+console.log("User ID:", userId);
+// Замените на любое значение для тестирования
 
 // Функция для получения баллов пользователя с сервера
 async function fetchUserPoints() {
@@ -89,10 +92,10 @@ function setInitialTheme() {
     const prizeElement = document.createElement('div');
     prizeElement.classList.add('message');
     prizeElement.innerHTML = `
-      <img src="${prize.image}" alt="${prize.name}" />
+      <img src="/GAmefication/img/${prize.image}" alt="${prize.name}" />
       <p>${prize.name}</p>
       <p>Cost: ${prize.cost} points</p>
-      <button onclick="buyPrize(${prize.id})">Buy</button>
+      <button class="telegram-button"  onclick="buyPrize(${prize.id})">Buy</button>
     `;
     prizesContainer.appendChild(prizeElement);
   });
@@ -100,5 +103,48 @@ function setInitialTheme() {
   // Добавляем обработчик для кнопки переключения темы
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 })();
+
+
+document.getElementById('navigate-button').addEventListener('click', () => {
+  window.location.href = 'index1.html';
+});
+
+// app.js
+document.addEventListener('DOMContentLoaded', () => {
+  // Проверяем состояние кнопок при загрузке страницы
+  ['channel1', 'channel2', 'channel3', 'channel4'].forEach(channelId => {
+      if (localStorage.getItem(channelId) === 'subscribed') {
+          document.getElementById(channelId).disabled = true;
+      }
+  });
+});
+
+async function subscribe(channelId, url) {
+  // Открываем ссылку в новом окне
+  window.open(url, '_blank');
+  
+  try {
+      const response = await fetch('/update-points', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userId, channelId })
+      });
+      const data = await response.json();
+      if (data.error) {
+          alert(data.error);
+      } else {
+          alert(`Вы успешно подписались на канал!`);
+          // Делаем кнопку неактивной
+          document.getElementById(channelId).disabled = true;
+          // Сохраняем состояние в localStorage
+          localStorage.setItem(channelId, 'subscribed');
+      }
+  } catch (error) {
+      console.error('Ошибка при подписке:', error);
+  }
+}
+
 
 
