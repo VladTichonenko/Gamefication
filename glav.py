@@ -10,7 +10,7 @@ from aiogram.dispatcher import FSMContext
 import keyboard as krb
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import config as cf
-#from Gamefication import database as db
+import database as db
 from database import DataBase
 import os
 from datetime import datetime, timedelta
@@ -22,6 +22,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import logging
 import requests
 import time
+
 
 BOT_TOKEN='7106909032:AAHSN6OOHppekDf4_pwxqBffVw-vWfsQmxw'
 
@@ -66,7 +67,11 @@ Chanel2_id="-1002154835852"
 Not_Sub_Message="Для доступа к функционалу, пожалуйста подпишитесь на канал!"
 storage=MemoryStorage()
 
-db1 = DataBase(r'E:/gemivication/Gamefication/database/users.db')
+# Определяем относительный путь к базе данных
+db_path = os.path.join('database', 'users.db')
+
+# Создаем объект DataBase с относительным путем
+db1 = DataBase(db_path)
 
 async def check_subscriptions(user_id, channel_ids):
     subscriptions = []
@@ -78,7 +83,7 @@ async def check_subscriptions(user_id, channel_ids):
 
 
 async def on_startup(_):
-    
+    await db.db_start()
     print('Бот успешно запущен!')
 
 # Классы для FSM
@@ -227,22 +232,23 @@ async def handle_message(message: types.Message):
                 f'{full_name}, в Вашем комментарии обнаружено негативное слово!\nСообщение было удалено. Ваши баллы: {current_score}')
 
 
-
-
-
 @dp.message_handler(state=NewOrder.name)
-async def start(message: types.Message , state: FSMContext):
+async def start_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['name']=message.text
+        data['name'] = message.text
     await message.answer("Введите количество баллов за приз", reply_markup=krb.cancel_keyboard())
+    print("Состояние изменено на NewOrder.photo")
     await NewOrder.next()
+
 
 @dp.message_handler(state=NewOrder.price)
-async def start(message: types.Message , state: FSMContext):
+async def start_price(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['price']=message.text
+        data['price'] = message.text
     await message.answer("Отправьте фото", reply_markup=krb.cancel_keyboard())
+    print("Состояние изменено на NewOrder.photo")
     await NewOrder.next()
+
 
 @dp.message_handler(lambda message: not message.photo, state=NewOrder.photo)
 async def add_item_photo_check(message: types.Message):
@@ -252,24 +258,29 @@ async def add_item_photo_check(message: types.Message):
 @dp.message_handler(content_types=['photo'], state=NewOrder.photo)
 async def add_item_photo(message: types.Message, state: FSMContext):
     # Получаем фото и выбираем наибольшее качество
+    print("Получение фото...")
     photo = message.photo[-1]  # берём самое качественное фото (последний элемент)
+
     # Получаем файл изображения
     file_id = photo.file_id
     file = await bot.get_file(file_id)
+
     # Указываем путь для сохранения
-    way = '/GAmefication/img/' + file.file_path.split('/')[
-        -1]  # Добавляем имя файла
+    way = f'C:/Users/user/PycharmProjects/pythonProject21/GAmefication/img/{file.file_path.split("/")[-1]}'  # Добавляем имя файла
+
     # Скачиваем файл
     await bot.download_file(file.file_path, way)  # Сохраняем файл
     print("Фото сохранено")
+
     # Сохраняем идентификатор файла в состоянии
     async with state.proxy() as data:
+        data['discription']=None
         data['photo'] = file_id
+
     # Добавляем элемент в базу данных
-    await db1.add_item(state)
+    await db.add_item(state)
     await message.answer('Приз успешно добавлен!')
     await state.finish()
-
 
 @dp.callback_query_handler(text='cancel', state="*")
 async def cancel_handler(callback_query: types.CallbackQuery, state: FSMContext):
