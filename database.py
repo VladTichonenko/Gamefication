@@ -6,13 +6,25 @@ async def db_start():
     cur = db.cursor()
 '''
 
+async def db_start():
+    global db, cur
+    db = sq.connect('priz.db')
+    cur = db.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS items("
+                "i_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                "name TEXT, "
+                "price TEXT, "
+                "discription None, "
+                "photo TEXT)")
+    db.commit()
 
 async def add_item(state):
     global db, cur
     async with state.proxy() as data:
-        cur.execute("INSERT INTO prizes (name, description, cost, image) VALUES (?, ?, ?, ?)",
-                    (data['name'], None, data['price'], data['photo']))
+        cur.execute("INSERT INTO items (name, price,discription, photo) VALUES (?, ?,?, ?)",  # Исправлено на 'accounts'
+                    (data['name'], data['price'],data['discription'], data['photo']))
         db.commit()
+
 
 class DataBase:
     def __init__(self, db_file):
