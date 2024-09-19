@@ -1,15 +1,15 @@
 from telethon.sync import TelegramClient
 from telethon import functions, types
 
-api_id = "21451938"
-api_hash = "02e804da78ecfda445b8ce657e9020bc"
-phone = "+88802424137"
+api_id = "20211195"
+api_hash = "900a88063d66744450d23f6ddd52af6e"
+phone = "+375295332073"
 
 client = TelegramClient(phone, api_id, api_hash)
 
 async def reaction():
     async with client:
-        messages = await client.get_messages('@luxcrypto123', limit=5)
+        messages = await client.get_messages('@mvp1test', limit=5)
 
         if messages:
             msg_id = messages[1].id
@@ -17,7 +17,7 @@ async def reaction():
 
             # Отправка реакции
             await client(functions.messages.SendReactionRequest(
-                peer='@luxcrypto123',
+                peer='@mvp1test',
                 msg_id=msg_id,
                 big=True,
                 add_to_recent=True,
@@ -26,7 +26,7 @@ async def reaction():
 
             # Получение списка реакций
             result = await client(functions.messages.GetMessagesReactionsRequest(
-                peer='@luxcrypto123',
+                peer='@mvp1test',
                 id=[msg_id]
             ))
 
