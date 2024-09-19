@@ -24,7 +24,7 @@ import requests
 import time
 
 
-BOT_TOKEN='7106909032:AAHSN6OOHppekDf4_pwxqBffVw-vWfsQmxw'
+BOT_TOKEN='7061940889:AAHwuc8VIAg2CPAQAel9g-XdJR9Lo8_X4mc'
 
 
 # функция на добовления плохих слов
