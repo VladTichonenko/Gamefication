@@ -1,1 +1,1 @@
-BOT_NAME="test_mvp1_bot"
+BOT_NAME="Tglfpbot"
