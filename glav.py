@@ -266,7 +266,7 @@ async def add_item_photo(message: types.Message, state: FSMContext):
     file = await bot.get_file(file_id)
 
     # Указываем путь для сохранения
-    way = f'C:/Users/user/PycharmProjects/pythonProject21/GAmefication/img/{file.file_path.split("/")[-1]}'  # Добавляем имя файла
+    way = f'/Gamefication/img/{file.file_path.split("/")[-1]}'  # Добавляем имя файла
 
     # Скачиваем файл
     await bot.download_file(file.file_path, way)  # Сохраняем файл
@@ -274,11 +274,10 @@ async def add_item_photo(message: types.Message, state: FSMContext):
 
     # Сохраняем идентификатор файла в состоянии
     async with state.proxy() as data:
-        data['discription']=None
         data['photo'] = file_id
 
     # Добавляем элемент в базу данных
-    await db.add_item(state)
+    await db1.add_item(state)
     await message.answer('Приз успешно добавлен!')
     await state.finish()
 
@@ -309,6 +308,7 @@ async def subchanel(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda query: query.data == 'more')
 async def More(callback_query: types.CallbackQuery):
+    await bot.delete_message(callback_query.from_user.id, callback_query.message.message_id)
     await bot.send_message(
         callback_query.from_user.id,
         "<b>TGplay: Получайте больше от подписки на канал!</b>\n\n"
@@ -317,19 +317,27 @@ async def More(callback_query: types.CallbackQuery):
         "️️⚠️ Награды, их содержание и доставка являются ответственностью админов/владельцев каналов.",
         parse_mode='HTML'  # Указываем режим разметки
     )
+    await bot.send_message(callback_query.from_user.id, "👌" , reply_markup=krb.Back)
 
 
 # реферальная система
 @dp.callback_query_handler(lambda query: query.data == 'profile')
 async def Prof(callback_query: types.CallbackQuery):
+    await bot.delete_message(callback_query.from_user.id, callback_query.message.message_id)
     if callback_query.message.chat.type == 'private':
         user_name = callback_query.from_user.first_name
         user_last_name = callback_query.from_user.last_name
         user_id = callback_query.from_user.id
         referals_count = db1.count_referals(user_id)  # предполагается, что функция принимает user_id
         full_name = f'{user_name} {user_last_name}' if user_last_name else user_name
-        await bot.send_message(callback_query.from_user.id, f'👤 {full_name}\n\nВаш ID: {callback_query.from_user.id}\nВаша реферальная ссылка 🎁: https://t.me/{cf.BOT_NAME}?start={callback_query.from_user.id}\n\nКол-во рефералов: {referals_count}')
+        await bot.send_message(callback_query.from_user.id, f'👤 {full_name}\n\nВаш ID: {callback_query.from_user.id}\nВаша реферальная ссылка 🎁: https://t.me/{cf.BOT_NAME}?start={callback_query.from_user.id}\n\nКол-во рефералов: {referals_count}', reply_markup=krb.Back)
 
+@dp.callback_query_handler(lambda query: query.data == 'back')
+async def Back(callback_query: types.CallbackQuery):
+    await bot.send_message(callback_query.from_user.id, "Главное меню", reply_markup=krb.create_keyboard(user_id))
+
+
+'''
 @dp.message_handler(content_types=types.ContentType.ANY)
 async def add_button_to_new_post(message: types.Message):
     if message.chat.type == 'channel':
@@ -338,36 +346,58 @@ async def add_button_to_new_post(message: types.Message):
         keyboard.add(participate_button)
 
         await bot.edit_message_reply_markup(chat_id=message.chat.id, message_id=message.message_id, reply_markup=keyboard)
+'''
+
+# Предположим, что у вас есть метод, который вытягивает все user_id пользователей
+def get_all_user_ids():
+    # Пример: возвращаем список user_id из базы данных
+    return db1.get_all_user_ids()
+
+# Функция для получения количества реакций на посте
+async def get_reactions_count(post_url):
+    # Здесь должен быть код для получения количества реакций на посте
+    # Например, с помощью web scraping или API Telegram
+    return await reaction(0)  # Пример: возвращаем количество реакций
 
 @dp.channel_post_handler()
 async def channel_message(message: types.Message):
     # Когда в канале появляется новое сообщение, оно будет обрабатываться здесь
-    reactions = await reaction()
-    db1.update_user_score(db1.get_random_user_id,reactions*50)
+    reactions = await reaction(1)
+    db1.update_user_score(db1.get_random_user_id(), reactions * 50)
     print(f"Saving to DB")
 
-@dp.channel_post_handler()
-async def channel_message(message: types.Message):
-    # Создаем кнопку с ссылкой на пост
-    post_url = f"впиши сюда ссылку на канал"
-    keyboard = InlineKeyboardMarkup().add(InlineKeyboardButton("Перейти к посту", url=post_url))
+    # Создаем кнопки с url и callback_data
+    post_url = f"https://t.me/{message.chat.username}/{message.message_id}"
+    keyboard = InlineKeyboardMarkup().add(
+        InlineKeyboardButton("Перейти к посту", url=post_url),
+        InlineKeyboardButton("Получить баллы", callback_data=f"goto_post:{message.message_id}")
+    )
 
-    # Отправляем сообщение с кнопкой в бота
-    await bot.send_message(message.chat.id, "Новый пост в канале!", reply_markup=keyboard)
+    # Получаем все user_id пользователей
+    user_ids = get_all_user_ids()
 
-@dp.callback_query_handler(lambda c: c.data and c.data.startswith('reaction'))
-async def process_callback_reaction(callback_query: types.CallbackQuery):
+    # Отправляем сообщение с кнопками каждому пользователю
+    for user_id in user_ids:
+        try:
+            await bot.send_message(user_id, "Новый пост в канале!", reply_markup=keyboard)
+        except Exception as e:
+            print(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith('goto_post'))
+async def process_goto_post(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
-    initial_reactions = await reaction()
+    message_id = callback_query.data.split(':')[1]
+    post_url = f"https://t.me/{callback_query.message.chat.username}/{message_id}"
+    initial_reactions = await get_reactions_count(post_url)
 
     await asyncio.sleep(10)  # Ждем 10 секунд
 
-    final_reactions = await reaction()
+    final_reactions = await get_reactions_count(post_url)
 
     if final_reactions > initial_reactions:
-        points = final_reactions - initial_reactions
-        db1.update_user_score(user_id, points)
-        await bot.answer_callback_query(callback_query.id, f"Вы получили {points} баллов!")
+        db1.update_user_score(user_id, 50)
+        await bot.answer_callback_query(callback_query.id, "Вы получили 50 баллов!")
+        await bot.send_message(callback_query.message.chat.id, f"Пользователь {callback_query.from_user.username} получил 50 баллов!")
     else:
         await bot.answer_callback_query(callback_query.id, "Количество реакций не изменилось.")
 

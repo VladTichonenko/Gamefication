@@ -18,13 +18,6 @@ async def db_start():
                 "photo TEXT)")
     db.commit()
 
-async def add_item(state):
-    global db, cur
-    async with state.proxy() as data:
-        cur.execute("INSERT INTO items (name, price,discription, photo) VALUES (?, ?,?, ?)",  # Исправлено на 'accounts'
-                    (data['name'], data['price'],data['discription'], data['photo']))
-        db.commit()
-
 
 class DataBase:
     def __init__(self, db_file):
@@ -38,7 +31,7 @@ class DataBase:
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    referal_id	 INTEGER,
+                    referal_id INTEGER,
                     points INTEGER DEFAULT 0
                 )
             """)
@@ -49,6 +42,15 @@ class DataBase:
                     description TEXT,
                     cost INTEGER NOT NULL,
                     image TEXT
+                )
+            """)
+            self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    price REAL NOT NULL,
+                    description TEXT,
+                    photo TEXT
                 )
             """)
 
@@ -62,13 +64,13 @@ class DataBase:
         with self.connection:
             print("adding user")
             if referer_id is not None:
-                return self.cursor.execute("INSERT INTO users (user_id, referal_id	, points) VALUES (?, ?, ?)", (user_id, int(referer_id), 0))
+                return self.cursor.execute("INSERT INTO users (user_id, referal_id, points) VALUES (?, ?, ?)", (user_id, int(referer_id), 0))
             else:
                 return self.cursor.execute("INSERT INTO users (user_id, points) VALUES (?, ?)", (user_id, 0))
 
     def count_referals(self, user_id):
         with self.connection:
-            return self.cursor.execute("SELECT COUNT(id) as count FROM users WHERE referal_id	 = ?", (user_id,)).fetchone()[0]
+            return self.cursor.execute("SELECT COUNT(id) as count FROM users WHERE referal_id = ?", (user_id,)).fetchone()[0]
     
     def get_user_score(self, user_id):
         with self.connection:
@@ -91,15 +93,25 @@ class DataBase:
             
             self.connection.commit()
 
-
     def get_random_user_id(self):
-            with self.connection:
-                result = self.cursor.execute("SELECT user_id FROM users ORDER BY RANDOM() LIMIT 1").fetchone()
-                return result[0] if result else None
-            
+        with self.connection:
+            result = self.cursor.execute("SELECT user_id FROM users ORDER BY RANDOM() LIMIT 1").fetchone()
+            return result[0] 
+
+    async def add_item(self, state):
+        async with state.proxy() as data:
+            self.cursor.execute("INSERT INTO prizes (name, description,cost , image) VALUES (?, ?, ?, ?)",
+                                (data['name'],None , data['price'], data['photo']))
+            self.connection.commit()
+    
+    def get_all_user_ids(self):
+        with self.connection:
+            result = self.cursor.execute("SELECT user_id FROM users").fetchall()
+            return [row[0] for row in result]
 
     def __del__(self):
         if hasattr(self, 'connection'):
             with self.connection:
                 self.connection.close()
+
 
