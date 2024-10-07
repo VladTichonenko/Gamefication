@@ -1,5 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('E:/gemivication/Gamefication/database/users.db');
+const db = new sqlite3.Database('/root/Gamefication/database/users.db');
 
 // Функция для получения баллов пользователя по его ID
 function getUserPointsById(userId, callback) {

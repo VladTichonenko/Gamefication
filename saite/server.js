@@ -34,6 +34,8 @@ app.post('/update-points', (req, res) => {
   });
 });
 
+
+
 // Маршрут для получения списка призов
 app.get('/prizes', (req, res) => {
   console.log('Запрос на получение списка призов');
