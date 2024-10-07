@@ -1,9 +1,5 @@
-// Установим локальные данные для тестирования
-const urlParams = new URLSearchParams(window.location.search);
-const userId = urlParams.get('user_id');
-console.log("User ID:", userId);
-// Замените на любое значение для тестирования
-
+const userId = 1; // Получаем user_id из параметров запроса
+console.log('Received user_id:', userId);
 // Функция для получения баллов пользователя с сервера
 async function fetchUserPoints() {
   try {
@@ -11,6 +7,7 @@ async function fetchUserPoints() {
     const data = await response.json();
     console.log(`Баллы пользователя: ${data.points}`);
     return data.points;
+
   } catch (error) {
     console.error('Ошибка при получении баллов пользователя:', error);
     return 0;

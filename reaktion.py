@@ -7,12 +7,12 @@ phone = "+375295332073"
 
 client = TelegramClient(phone, api_id, api_hash)
 
-async def reaction():
+async def reaction(index):
     async with client:
         messages = await client.get_messages('@mvp1test', limit=5)
 
         if messages:
-            msg_id = messages[1].id
+            msg_id = messages[index].id
             print(f"Используемый msg_id: {msg_id}")
 
             # Отправка реакции
@@ -40,4 +40,4 @@ async def reaction():
             return total_reactions
 
 with client:
-    client.loop.run_until_complete(reaction())
+    client.loop.run_until_complete(reaction(0))
